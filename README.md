@@ -6,7 +6,7 @@
 **Study area:** Khalifa City, Abu Dhabi, UAE  
 **Status:** Real-data Earth-observation Proof of Concept
 
-FalconHeat AI is an explainable geospatial decision-support system that identifies which parts of Khalifa City should receive heat-mitigation attention first. The advanced dashboard combines **current heat**, **vegetation**, **built-up land**, **population exposure**, and **2021→2026 urban-change signals** inside a precise Khalifa City area of interest.
+FalconHeat AI is an explainable geospatial decision-support system that identifies which parts of Khalifa City should receive heat-mitigation attention first. The advanced dashboard combines **current heat**, **vegetation**, **built-up land**, **population exposure**, and **2021→2026 urban-change signals** inside a clipped Khalifa City study area of interest.
 
 The system deliberately separates **measured/derived evidence** from **decision logic**. Satellite and population inputs remain traceable to their source products, while the final 0–100 score is clearly labelled as a **relative planning-priority index**, not a medical heat-health threshold.
 
@@ -16,7 +16,7 @@ The system deliberately separates **measured/derived evidence** from **decision 
 
 Compared with the earlier PoC, this version includes:
 
-- precise Khalifa City polygon masking instead of a rectangular grid;
+- clipped Khalifa City study-polygon masking instead of a rectangular grid;
 - **summer-matched Sentinel-2 change analysis: 2021 → 2026**;
 - **WorldPop 2026 population exposure** at 100 m resolution;
 - land-surface heat anomaly relative to the Khalifa City median;
@@ -229,28 +229,41 @@ The provenance file records actual scene IDs, acquisition dates, cloud metadata,
 
 ---
 
-## Project structure
+## Repository structure
+
+The repository follows the **813 Challenge starter structure** supplied by the organizers.  
+FalconHeat also keeps the small runtime folders required by the live Streamlit website.
 
 ```text
-FalconHeat-AI-Self-Explaining/
-├── app.py
-├── requirements.txt
-├── src/
-│   ├── real_eo.py
-│   ├── advanced_eo.py
-│   ├── analysis.py
-│   └── eo_deep_learning.py
-├── data/
-│   ├── KHALIFA_AOI_METHOD.md
-│   ├── processed/
-│   └── khalifa_city_boundary.geojson   # optional
+falconheat-khalifa-city/
+│
+├── README.md
+│
 ├── notebooks/
-│   └── FalconHeat_AI.ipynb
-└── docs/
-    ├── ADVANCED_METHODOLOGY.md
-    ├── JUDGING_NOTES.md
-    └── REAL_DATA_REPLACEMENT_GUIDE.md
+│   ├── 00_data_exploration_starter.ipynb
+│   ├── 01_agriculture_crop_intelligence.ipynb
+│   ├── 02_land_use_land_cover_change.ipynb      ← Team 971 Liftoff / FalconHeat
+│   ├── 03_air_quality_ghg_plumes.ipynb
+│   ├── 04_climate_disasters_fire_flood.ipynb
+│   └── 05_ecosystem_health_blue_carbon.ipynb
+│
+├── docs/
+│   ├── spectral_indices_reference.md
+│   ├── tanager_data_guide.md
+│   └── stac_collection_map.md
+│
+├── assets/
+│   └── images/
+│
+├── requirements.txt
+│
+├── app.py                                  ← live FalconHeat Streamlit app
+├── src/                                    ← FalconHeat analysis code
+└── data/                                   ← published real-EO snapshot/provenance
 ```
+
+The hackathon submission is **Theme 2: Urban Expansion, Land Use Change & Heat Risk**.  
+The main reproducible notebook is `notebooks/02_land_use_land_cover_change.ipynb`.
 
 ---
 
@@ -340,6 +353,6 @@ The underlying EO and v4.2 conservative change-scoring methodology are unchanged
 
 ## Public competition deployment
 
-This package includes a read-only real-data competition snapshot for Streamlit
-Community Cloud. Public visitors can interact with the analysis without triggering
-remote EO rebuilding. See `DEPLOY_STREAMLIT.md`.
+Live dashboard: **https://falconheat-khalifa-city.streamlit.app**
+
+The public Streamlit build uses the bundled real-data competition snapshot so judges can interact with the maps, explainability views, exposure analysis and Scenario Lab without triggering a remote EO rebuild.
