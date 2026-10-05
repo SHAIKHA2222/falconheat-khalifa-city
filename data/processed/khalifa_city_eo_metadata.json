@@ -1,0 +1,159 @@
+{
+  "advanced_version": "4.0",
+  "study_area": "Khalifa City, Abu Dhabi, UAE",
+  "analysis_period": "Summer 2026",
+  "aoi_bbox_wgs84": [
+    54.5415,
+    24.386,
+    54.622,
+    24.451
+  ],
+  "aoi_boundary_source": "Curated Khalifa City study polygon",
+  "aoi_boundary_label": "Fallback polygon based on verified Khalifa City localities and sector anchors",
+  "aoi_boundary_is_fallback": true,
+  "aoi_boundary_geojson": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          54.543239393939395,
+          24.407666666666668
+        ],
+        [
+          54.545,
+          24.4215
+        ],
+        [
+          54.54833333333333,
+          24.429333333333332
+        ],
+        [
+          54.555,
+          24.445
+        ],
+        [
+          54.561625,
+          24.44616911764706
+        ],
+        [
+          54.58175,
+          24.449720588235294
+        ],
+        [
+          54.589,
+          24.451
+        ],
+        [
+          54.601875,
+          24.44978537735849
+        ],
+        [
+          54.6155,
+          24.4485
+        ],
+        [
+          54.622,
+          24.433
+        ],
+        [
+          54.620826666666666,
+          24.429333333333332
+        ],
+        [
+          54.614,
+          24.408
+        ],
+        [
+          54.61366666666666,
+          24.407666666666664
+        ],
+        [
+          54.601875,
+          24.395875000000004
+        ],
+        [
+          54.596,
+          24.39
+        ],
+        [
+          54.58175,
+          24.388416666666668
+        ],
+        [
+          54.561625,
+          24.386180555555555
+        ],
+        [
+          54.56,
+          24.386
+        ],
+        [
+          54.5415,
+          24.394
+        ],
+        [
+          54.543239393939395,
+          24.407666666666668
+        ]
+      ]
+    ]
+  },
+  "analysis_cells": 12,
+  "landsat": {
+    "provider": "USGS Landsat Collection 2 Level-2 via Microsoft Planetary Computer",
+    "collection": "landsat-c2-l2",
+    "acquisition": "2026-09-24",
+    "scene_cloud_cover_pct": 0.0,
+    "aoi_coverage_pct": 100.0,
+    "item_id": "LC08_L2SP_160043_20260924_02_T1",
+    "indicator": "Land-surface temperature"
+  },
+  "sentinel2": {
+    "provider": "Copernicus Sentinel-2 Level-2A via Microsoft Planetary Computer",
+    "collection": "sentinel-2-l2a",
+    "acquisition": "2026-09-27",
+    "scene_cloud_cover_pct": 0.1,
+    "aoi_coverage_pct": 100.0,
+    "item_id": "S2C_MSIL2A_20260927T065641_R063_T40RBN_20260927T121710 | S2C_MSIL2A_20260927T065641_R063_T40QBM_20260927T121710 | S2C_MSIL2A_20260927T065641_R063_T39RZH_20260927T121710",
+    "indicator": "Current NDVI / NDBI"
+  },
+  "sentinel2_historical": {
+    "provider": "Copernicus Sentinel-2 Level-2A via Microsoft Planetary Computer",
+    "collection": "sentinel-2-l2a",
+    "period": "2021-07-01/2021-09-30",
+    "acquisition": "2021-09-18",
+    "aoi_coverage_pct": 100.0,
+    "item_id": "S2B_MSIL2A_20210918T065619_R063_T40RBN_20210918T190936 | S2B_MSIL2A_20210918T065619_R063_T40QBM_20210918T192645 | S2B_MSIL2A_20210918T065619_R063_T39RZH_20210918T183139",
+    "indicator": "Summer-matched historical NDVI / NDBI baseline"
+  },
+  "worldcover": {
+    "provider": "ESA WorldCover via Microsoft Planetary Computer",
+    "year": 2021,
+    "aoi_coverage_pct": 100.0,
+    "item_id": "ESA_WorldCover_10m_2021_v200_N24E054",
+    "indicator": "Built-up class 50 structural baseline"
+  },
+  "worldpop": {
+    "provider": "WorldPop Global2 population API v2",
+    "year": 2026,
+    "resolution": "100m",
+    "successful_cells": 12,
+    "total_cells": 12,
+    "note": "WorldPop values are model-based gridded estimates, not official census counts."
+  },
+  "sentinel1": {
+    "status": "unavailable",
+    "caution": "Optional diagnostic only; not used in the priority score."
+  },
+  "advanced_features": {
+    "historical_sentinel": true,
+    "worldpop_2026": true,
+    "sentinel1_diagnostic": false,
+    "confidence_definition": "Evidence-completeness score combining source coverage, scene cloud metadata, population availability and polygon geometry. It is not a statistical confidence interval."
+  },
+  "deployment": {
+    "mode": "public_snapshot",
+    "snapshot_date": "2026-10-05",
+    "note": "Bundled competition snapshot generated from real EO inputs; public visitors cannot rebuild the AOI or trigger remote EO acquisition."
+  }
+}
