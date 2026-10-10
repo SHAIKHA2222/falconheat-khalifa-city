@@ -134,7 +134,7 @@ The tests check score/export consistency, contribution sums, missing data, exact
 
 The layout below follows the organizer's starter-repository presentation style while documenting **our actual FalconHeat files**. Labels distinguish the team's implementation from organizer-provided references.
 
-\`\`\`text
+```text
 falconheat-khalifa-city/
 │
 ├── README.md                                    ← You are here: project overview, methods and limitations
@@ -181,9 +181,9 @@ falconheat-khalifa-city/
 │   └── images/                                   ← Placeholder for project images and screenshots
 │
 └── .gitignore                                    ← Local and generated files excluded from Git
-\`\`\`
+```
 
-**What is ours?** The deployed Streamlit app, the \`src/\` processing and analysis code, the curated \`data/\` snapshot, the adapted land-use notebook, the submission review, and the tests form the FalconHeat project. The other theme notebooks and three reference guides are retained as **organizer-provided starter materials** for learning and traceability; they are **not separate features implemented in FalconHeat**.
+**What is ours?** The deployed Streamlit app, the `src/` processing and analysis code, the curated `data/` snapshot, the adapted land-use notebook, the submission review, and the tests form the FalconHeat project. The other theme notebooks and three reference guides are retained as **organizer-provided starter materials** for learning and traceability; they are **not separate features implemented in FalconHeat**.
 
 
 **FalconHeat — from satellite observations to explainable urban planning priorities.**
