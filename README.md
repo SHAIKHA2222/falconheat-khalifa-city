@@ -130,19 +130,60 @@ The tests check score/export consistency, contribution sums, missing data, exact
 - 813 imagery is not yet integrated into scoring. Check organizer requirements before claiming challenge-data compliance.
 - Field/municipal validation, an official boundary, multi-date composites, uncertainty analysis and an EO-trained segmentation model are future development.
 
-## Repository structure
+## 📂 Repository Structure
 
-```text
-app.py                         Streamlit dashboard
-src/analysis.py                Priority model and scenario sensitivity
-src/real_eo.py                 Core EO acquisition and polygon statistics
-src/advanced_eo.py             Historical, population and SAR enrichment
-src/eo_deep_learning.py        Separate optional experiment
-data/processed/               Published snapshot, provenance and deployment marker
-notebooks/02_land_use_land_cover_change.ipynb  Main reproducible notebook
-docs/                         Source guides and submission review
-tests/                        Regression and app tests
-requirements.txt              Website dependencies
-```
+The layout below follows the organizer's starter-repository presentation style while documenting **our actual FalconHeat files**. Labels distinguish the team's implementation from organizer-provided references.
+
+\`\`\`text
+falconheat-khalifa-city/
+│
+├── README.md                                    ← You are here: project overview, methods and limitations
+├── app.py                                       ← Live FalconHeat Streamlit dashboard (5 tabs)
+├── requirements.txt                             ← Dependencies needed to run the website
+│
+├── .streamlit/
+│   └── config.toml                              ← Streamlit app theme and configuration
+│
+├── src/                                         ← FALCONHEAT IMPLEMENTATION
+│   ├── __init__.py                              ← Python package initializer
+│   ├── analysis.py                              ← Transparent heat-priority index and scenario calculations
+│   ├── real_eo.py                               ← Satellite data acquisition and polygon-level measurements
+│   ├── advanced_eo.py                           ← Historical change, population and optional SAR enrichment
+│   └── eo_deep_learning.py                      ← Optional experiment; NOT used by the deployed dashboard
+│
+├── data/                                        ← FALCONHEAT STUDY DATA
+│   ├── KHALIFA_AOI_METHOD.md                    ← Study-area selection and boundary methodology
+│   └── processed/
+│       ├── README.md                            ← Explanation of processed snapshot files
+│       ├── khalifa_city_eo.csv                  ← Bundled measurements for 12 Khalifa City polygons
+│       ├── khalifa_city_eo_metadata.json        ← Scene metadata, provenance and processing settings
+│       └── deployment_snapshot.marker           ← Keeps public deployment on the bundled snapshot
+│
+├── notebooks/
+│   ├── 00_data_exploration_starter.ipynb         ← Organizer starter: data exploration reference
+│   ├── 01_agriculture_crop_intelligence.ipynb   ← Organizer starter: agriculture theme reference
+│   ├── 02_land_use_land_cover_change.ipynb      ← FALCONHEAT: adapted workflow and snapshot reproduction
+│   ├── 03_air_quality_ghg_plumes.ipynb          ← Organizer starter: air-quality theme reference
+│   ├── 04_climate_disasters_fire_flood.ipynb    ← Organizer starter: climate-disasters theme reference
+│   └── 05_ecosystem_health_blue_carbon.ipynb    ← Organizer starter: ecosystem theme reference
+│
+├── docs/
+│   ├── submission_review.md                     ← FALCONHEAT: submission checks and scientific limitations
+│   ├── spectral_indices_reference.md            ← Organizer reference: spectral-index formulas
+│   ├── tanager_data_guide.md                    ← Organizer reference: Tanager imagery/data format
+│   └── stac_collection_map.md                   ← Organizer reference: STAC collections and item IDs
+│
+├── tests/
+│   ├── test_analysis.py                          ← Heat-priority formula and numerical regression tests
+│   └── test_app.py                               ← Dashboard behavior and export regression tests
+│
+├── assets/
+│   └── images/                                   ← Placeholder for project images and screenshots
+│
+└── .gitignore                                    ← Local and generated files excluded from Git
+\`\`\`
+
+**What is ours?** The deployed Streamlit app, the \`src/\` processing and analysis code, the curated \`data/\` snapshot, the adapted land-use notebook, the submission review, and the tests form the FalconHeat project. The other theme notebooks and three reference guides are retained as **organizer-provided starter materials** for learning and traceability; they are **not separate features implemented in FalconHeat**.
+
 
 **FalconHeat — from satellite observations to explainable urban planning priorities.**
