@@ -130,8 +130,12 @@ def run_analysis(data):
 
     for col in ["latitude", "longitude", "lst_c", "ndvi", "built_up"]:
         df[col] = pd.to_numeric(df[col], errors="raise")
-    if df[["latitude", "longitude", "lst_c", "ndvi", "built_up"]].isna().any().any():
-        raise ValueError("Core EO indicators contain missing values.")
+    if df.empty:
+        raise ValueError("At least one analysis polygon is required.")
+    if not np.isfinite(df[["latitude", "longitude", "lst_c", "ndvi", "built_up"]].to_numpy()).all():
+        raise ValueError("Core EO indicators must be finite and non-missing.")
+    if not df["ndvi"].between(-1, 1).all() or not df["built_up"].between(0, 1).all():
+        raise ValueError("NDVI must be in [-1, 1] and built_up in [0, 1].")
 
     # Current-state drivers.
     df["temp_norm"] = normalize(df["lst_c"])
@@ -141,6 +145,8 @@ def run_analysis(data):
     # Population: log transform avoids one dense polygon dominating the entire index.
     if "population_2026" in df.columns:
         pop = pd.to_numeric(df["population_2026"], errors="coerce")
+        pop = pop.where(np.isfinite(pop) & (pop >= 0))
+        df["population_2026"] = pop
         df["population_norm"] = normalize(np.log1p(pop.clip(lower=0)))
     else:
         df["population_norm"] = np.nan
@@ -150,8 +156,8 @@ def run_analysis(data):
     # differences from atmosphere, acquisition geometry and surface condition.
     # Do not amplify tiny changes into a full 15-point contribution.
     if {"ndvi_change", "ndbi_change"}.issubset(df.columns):
-        ndvi_change = pd.to_numeric(df["ndvi_change"], errors="coerce")
-        ndbi_change = pd.to_numeric(df["ndbi_change"], errors="coerce")
+        ndvi_change = pd.to_numeric(df["ndvi_change"], errors="coerce").replace([np.inf, -np.inf], np.nan)
+        ndbi_change = pd.to_numeric(df["ndbi_change"], errors="coerce").replace([np.inf, -np.inf], np.nan)
 
         # Keep raw descriptive changes.
         df["vegetation_loss"] = (-ndvi_change).clip(lower=0)
@@ -170,8 +176,8 @@ def run_analysis(data):
         missing_change = ndvi_change.isna() | ndbi_change.isna()
         df.loc[missing_change, "urban_change_norm"] = np.nan
         df["clear_change_flag"] = (
-            (ndvi_change <= -NDVI_CHANGE_TOLERANCE)
-            | (ndbi_change >= NDBI_CHANGE_TOLERANCE)
+            (ndvi_change < -NDVI_CHANGE_TOLERANCE)
+            | (ndbi_change > NDBI_CHANGE_TOLERANCE)
         ) & (~missing_change)
     else:
         df["vegetation_loss"] = np.nan
@@ -294,7 +300,7 @@ def scenario_score(
     score = float(sum(contrib.values()))
     return {
         "score": round(score, 1),
-        "level": classify(score),
+        "level": classify(round(score, 1)),
         "lst_c": round(temp, 2),
         "ndvi": round(ndvi, 4),
         "built_up": round(built, 4),

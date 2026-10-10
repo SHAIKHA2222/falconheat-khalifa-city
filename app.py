@@ -84,6 +84,7 @@ padding:7px 11px;border-radius:999px;font-size:.76rem;font-weight:800;margin-top
 [data-testid="stMetricValue"]{font-size:clamp(1.55rem,2.15vw,2.3rem);white-space:normal;overflow:visible;text-overflow:clip}
 [data-testid="stMetricDelta"]{white-space:normal;overflow:visible;text-overflow:clip}
 div[data-testid="stTabs"] button{font-weight:800}
+@media(max-width:640px){.hero{padding:18px}.hero-title{font-size:2.2rem}.source-date{white-space:normal;overflow-wrap:anywhere}.section-title{font-size:1.5rem}}
 </style>
 """,
     unsafe_allow_html=True,
@@ -112,7 +113,7 @@ with st.sidebar:
     st.markdown(
         """
         <div class="formula-card">
-          <div class="formula">H = 0.35T + 0.20B + 0.15V + 0.15P + 0.15C</div>
+          <div class="formula">H = 100 × (0.35T + 0.20B + 0.15V + 0.15P + 0.15C)</div>
           <div class="formula-key">
             <b>T</b> surface heat · <b>B</b> built-up land · <b>V</b> low vegetation<br>
             <b>P</b> estimated population exposure · <b>C</b> conservative 2021→2026 change evidence
@@ -126,13 +127,13 @@ with st.sidebar:
     )
 
     if PUBLIC_SNAPSHOT:
-        with st.expander("AOI boundary precision"):
+        with st.expander("Study boundary"):
             st.caption(
-                "Public snapshot is read-only. The current AOI is the curated Khalifa City study polygon "
-                "used for the competition analysis; it is not an official municipal boundary."
+                "This analysis covers a defined study area in Khalifa City, Abu Dhabi. "
+                "It does not represent an official municipal boundary."
             )
     else:
-        with st.expander("AOI boundary precision"):
+        with st.expander("Study boundary"):
             st.caption(
                 "Optional: upload an organizer/municipal Khalifa City GeoJSON. "
                 "It overrides the automatic OSM/fallback study boundary."
@@ -224,6 +225,8 @@ def cloud_text(v):
 
 def safe_sum(series):
     vals = pd.to_numeric(series, errors="coerce")
+    if vals.empty:
+        return 0.0
     return float(vals.sum()) if vals.notna().any() else np.nan
 
 
@@ -276,9 +279,9 @@ def _driver_fact(r, driver):
         dvi = r.get("ndvi_change", np.nan)
         dbi = r.get("ndbi_change", np.nan)
         signals = []
-        if pd.notna(dvi) and dvi <= -0.02:
+        if pd.notna(dvi) and dvi < -0.02:
             signals.append(f"NDVI decreased by {abs(dvi):.3f}")
-        if pd.notna(dbi) and dbi >= 0.02:
+        if pd.notna(dbi) and dbi > 0.02:
             signals.append(f"NDBI increased by {dbi:.3f}")
         if signals:
             return "the conservative 2021→2026 change test flags " + " and ".join(signals)
@@ -292,7 +295,7 @@ def why_area(r, concise=False):
         ("Built-up land", float(r.get("contrib_built_up", 0))),
         ("Low vegetation", float(r.get("contrib_low_vegetation", 0))),
         ("Estimated resident exposure", float(r.get("contrib_population", 0))),
-        ("Recent urban-change stress", float(r.get("contrib_urban_change", 0))),
+        ("Recent change evidence", float(r.get("contrib_urban_change", 0))),
     ]
     drivers = sorted(drivers, key=lambda x: x[1], reverse=True)
     first, second = drivers[0][0], drivers[1][0]
@@ -311,7 +314,7 @@ s2_date = short_date(metadata.get("sentinel2", {}).get("acquisition"))
 ls_date = short_date(metadata.get("landsat", {}).get("acquisition"))
 hist_date = short_date(metadata.get("sentinel2_historical", {}).get("acquisition"))
 worldpop_ok = df["population_2026"].notna().any()
-change_ok = df["ndvi_2021"].notna().any()
+change_ok = df[["ndvi_change", "ndbi_change"]].notna().all(axis=1).any()
 
 # ------------------------------ HERO ----------------------------------------
 st.markdown(
@@ -322,7 +325,7 @@ st.markdown(
 <div class="hero-sub">
 <b>From satellite observation to explainable heat-mitigation decisions.</b><br>
 FalconHeat combines current land-surface temperature, vegetation, built-up land,
-population exposure and summer-matched 2021→2026 change evidence inside a precise Khalifa City AOI.
+population exposure and summer-matched 2021→2026 change evidence within a defined Khalifa City study area, not all of Abu Dhabi city.
 Every priority score is decomposable into its drivers and every source is traceable.
 </div>
 <div class="badge">● REAL EO · PUBLIC COMPETITION SNAPSHOT</div>
@@ -373,7 +376,7 @@ integrity_bits = [
 ]
 st.markdown(
     '<div class="source-note" style="margin:12px 0 18px">'
-    '<b>Data integrity status:</b> ' + " · ".join(integrity_bits) +
+    '<b>Source availability:</b> ' + " · ".join(integrity_bits) +
     ('<br><span class="muted">The current AOI is a curated study polygon, not an official municipal boundary.</span>'
      if boundary_is_fallback else '') +
     '</div>',
@@ -398,7 +401,7 @@ strongest_change = (
 hottest = df.loc[df["surface_heat_anomaly_c"].idxmax()]
 row1 = st.columns(3)
 kpi_card(row1[0], "Top priority polygon", f"{top.risk_score:.0f}/100", display_location(top))
-kpi_card(row1[1], "Peak surface temperature", f"{df.lst_c.max():.1f} °C", display_location(df.loc[df.lst_c.idxmax()]))
+kpi_card(row1[1], "Highest polygon-median LST", f"{df.lst_c.max():.1f} °C", display_location(df.loc[df.lst_c.idxmax()]))
 kpi_card(row1[2], "Hottest surface anomaly", f"{hottest.surface_heat_anomaly_c:+.1f} °C", f"above Khalifa City median · {display_location(hottest)}")
 
 st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
@@ -412,9 +415,9 @@ kpi_card(
 kpi_card(row2[1], "Median evidence completeness", f"{df.data_confidence.median():.0f}%", "Source coverage / cloud / exposure availability")
 kpi_card(
     row2[2],
-    "Clear 2021→2026 change evidence",
-    strongest_change.get("cell_id", "None") if strongest_change is not None else "None detected",
-    display_location(strongest_change) if strongest_change is not None else "No polygon exceeded the ±0.02 PoC tolerance",
+    "2021→2026 change-stress flags",
+    strongest_change.get("cell_id", "None") if strongest_change is not None else ("None detected" if change_ok else "Unavailable"),
+    display_location(strongest_change) if strongest_change is not None else ("No NDVI loss >0.02 or NDBI gain >0.02" if change_ok else "Historical comparison unavailable"),
 )
 
 st.markdown(
@@ -543,7 +546,7 @@ def make_map(layer, rows):
           <tr><td>NDVI 2021</td><td>{ndvi_hist}</td></tr>
           <tr><td>Built-up</td><td>{r.built_up*100:.1f}%</td></tr>
           <tr><td>Population</td><td>{pop_line}</td></tr>
-          <tr><td>Evidence confidence</td><td>{r.data_confidence:.0f}%</td></tr>
+          <tr><td>Evidence completeness</td><td>{r.data_confidence:.0f}%</td></tr>
           </table>
           <hr><b>Top driver:</b> {r.top_driver}<br>
           <b>Action:</b> {r.recommendation}
@@ -588,14 +591,25 @@ with tab_heat:
         min_score = st.slider("Minimum priority score", 0, 100, 0)
 
     view = df[df.risk_level.isin(levels) & (df.risk_score >= min_score)]
+    st.caption(f"Showing {len(view)} of {len(df)} polygons. Filters affect the map and queue; overview metrics and analysis below use the full study area.")
+    if view.empty:
+        st.info("No polygons match these filters. Lower the minimum score or select another priority class.")
     mapcol, queuecol = st.columns([2.35, 1])
     with mapcol:
-        st.markdown("### Khalifa City heat-priority map")
-        st_folium(make_map(layer, view), height=650, use_container_width=True, returned_objects=[])
+        st.markdown(f"### Khalifa City · {layer}")
+        if layer == "Priority":
+            st.caption("Low: 0–<25 · Moderate: 25–<50 · High: 50–<75 · Very High: 75–100. Relative planning classes, not health thresholds.")
+        elif layer == "Surface temperature":
+            st.caption(f"Green → red: {df.lst_c.min():.1f}–{df.lst_c.max():.1f} °C. Each polygon shows median surface temperature, not pixel maximum or air temperature.")
+        elif layer == "Estimated resident exposure":
+            st.caption("Cyan → red: lower → higher modeled resident totals per polygon. Grey: unavailable.")
+        else:
+            st.caption("Red: NDVI decrease · green: increase · grey: unavailable. Colours show relative change magnitude, not statistical significance.")
+        st_folium(make_map(layer, view), key="heat_map", height=650, use_container_width=True, returned_objects=[])
     with queuecol:
         st.markdown("### Priority queue")
         st.caption("EXPLAINABLE INDEX · DESCENDING")
-        for i, r in df.iterrows():
+        for i, r in view.reset_index(drop=True).iterrows():
             why_html = ""
             if r.risk_level in ("High", "Very High"):
                 why_html = f'<div class="rank-insight">{why_area(r, concise=True)}</div>'
@@ -681,7 +695,7 @@ with tab_heat:
             <div class="smallcaps">TOP DRIVER</div>
             <b style="font-size:1.3rem">{r.top_driver}</b><br><br>
             <b>Recommended planning response</b><br>{r.recommendation}<br><br>
-            <span class="muted">Evidence confidence: {r.data_confidence:.0f}% ·
+            <span class="muted">Evidence completeness: {r.data_confidence:.0f}% ·
             This is evidence completeness, not a statistical confidence interval.</span>
             </div>""",
             unsafe_allow_html=True,
@@ -700,7 +714,7 @@ with tab_change:
         ch1, ch2, ch3, ch4 = st.columns(4)
         ch1.metric("NDVI decrease polygons", ndvi_decrease_cells)
         ch2.metric("NDBI increase polygons", ndbi_increase_cells)
-        ch3.metric("Clear change flags", clear_flags, "±0.02 PoC tolerance")
+        ch3.metric("Change-stress flags", clear_flags, "NDVI loss / NDBI gain >0.02")
         ch4.metric("Median ΔNDVI / ΔNDBI", f"{df.ndvi_change.median():+.4f} / {df.ndbi_change.median():+.4f}")
 
         if ndbi_increase_cells == 0:
@@ -709,7 +723,7 @@ with tab_change:
                 <b>Current finding:</b> this summer-matched Sentinel-2 comparison shows
                 <b>no positive NDBI increase in any analysis polygon</b>. Negative ΔNDBI is
                 not presented as urban expansion. Small NDVI decreases are shown descriptively,
-                but only changes exceeding the transparent ±0.02 PoC tolerance contribute to
+                but only NDVI losses greater than 0.02 or NDBI gains greater than 0.02 contribute to
                 the priority model.
                 </div>""",
                 unsafe_allow_html=True,
@@ -717,7 +731,7 @@ with tab_change:
 
         left, right = st.columns([1.45, 1])
         with left:
-            st_folium(make_map("Vegetation change", df), height=560, use_container_width=True, returned_objects=[])
+            st_folium(make_map("Vegetation change", df), key="change_map", height=560, use_container_width=True, returned_objects=[])
         with right:
             q = df.sort_values("urban_change_norm", ascending=True)
             fig = go.Figure()
@@ -800,7 +814,7 @@ with tab_exposure:
 
         left,right = st.columns([1.4,1])
         with left:
-            st_folium(make_map("Estimated resident exposure", df), height=570, use_container_width=True, returned_objects=[])
+            st_folium(make_map("Estimated resident exposure", df), key="exposure_map", height=570, use_container_width=True, returned_objects=[])
         with right:
             q=df.sort_values("population_2026",ascending=True)
             fig=go.Figure(go.Bar(
@@ -901,9 +915,10 @@ with tab_evidence:
     st.markdown('<div class="section-label">Reproducibility</div><div class="section-title">Evidence, provenance & export</div>', unsafe_allow_html=True)
 
     e1,e2,e3 = st.columns(3)
-    e1.metric("Mean evidence confidence", f"{df.data_confidence.mean():.0f}%")
-    e2.metric("AOI coverage (current S2)", f"{metadata.get('sentinel2',{}).get('aoi_coverage_pct','—')}%")
-    e3.metric("AOI source", "OSM/Nominatim" if not metadata.get("aoi_boundary_is_fallback") else "Curated study polygon")
+    e1.metric("Mean evidence completeness", f"{df.data_confidence.mean():.0f}%")
+    e2.metric("Scene footprint coverage (S2)", f"{metadata.get('sentinel2',{}).get('aoi_coverage_pct','—')}%")
+    e3.metric("AOI source", aoi_source_short)
+    st.caption("Evidence completeness is a metadata-based heuristic, not accuracy or measured valid-pixel coverage. The current comparison uses one acquisition day per year, not a seasonal composite.")
 
     st.markdown("### Source trace")
     source_text = f"""
@@ -947,6 +962,7 @@ with tab_evidence:
         key="evidence_813",
     )
     if tif is not None:
+        tmp_path = None
         try:
             import rasterio
             import matplotlib.pyplot as plt
@@ -1004,11 +1020,25 @@ with tab_evidence:
                     plt.close(fig)
         except Exception as exc:
             st.error(f"Could not inspect this GeoTIFF: {exc}")
+        finally:
+            if tmp_path is not None:
+                Path(tmp_path).unlink(missing_ok=True)
 
     st.markdown("### Export reproducible outputs")
+    st.caption("Exports include all study polygons and baseline results; map filters and illustrative scenarios do not alter them.")
     c1,c2 = st.columns(2)
     csv_bytes=df.to_csv(index=False).encode("utf-8")
-    meta_bytes=json.dumps(metadata,indent=2).encode("utf-8")
+    export_metadata = dict(metadata)
+    export_metadata["analysis_model"] = {
+        "version": "4.4", "type": "weighted planning-priority index; no trained ML inference",
+        "nominal_weights": BASE_WEIGHTS,
+        "normalization": "AOI min-max for T/B/V; log1p then min-max for P; fixed scale for C",
+        "change_formula": "C = 0.5*clip((-delta_ndvi-0.02)/0.08,0,1) + 0.5*clip((delta_ndbi-0.02)/0.08,0,1)",
+        "score_formula": "100 * sum(available weight * component) / sum(available weights)",
+        "classes": {"Low": "0 <= H < 25", "Moderate": "25 <= H < 50", "High": "50 <= H < 75", "Very High": "75 <= H <= 100"},
+        "scope": "Full study area; UI filters do not change normalization or exports",
+    }
+    meta_bytes=json.dumps(export_metadata,indent=2,allow_nan=False).encode("utf-8")
     c1.download_button(
         "⬇ Download analyzed CSV",
         data=csv_bytes,
@@ -1038,8 +1068,10 @@ with tab_evidence:
     with st.expander("Model transparency"):
         st.markdown(
             """
-The priority score is intentionally **not a black-box model**. It is a weighted,
-min-max-normalized decision index over the current Khalifa City analysis polygons.
+The priority score is intentionally **not a black-box model**. It is a weighted
+decision index over the current Khalifa City analysis polygons. Temperature, built-up,
+vegetation and log-population use AOI min-max normalization; change stress uses a
+fixed tolerance and scale. This dashboard does not use a trained deep-learning model.
 The five nominal weights are 35% temperature, 20% built-up, 15% low vegetation,
 15% population exposure and 15% urban-change stress. If an optional data source is
 missing, its weight is redistributed across the available measured components.
@@ -1049,7 +1081,7 @@ missing, its weight is redistributed across the available measured components.
 - Landsat LST measures land-surface temperature, not 2 m air temperature.
 - WorldCover 2021 is a structural baseline and not a 2026 impervious-surface map.
 - WorldPop is a model-based gridded estimate, not an official census.
-- NDVI/NDBI change is an index signal, not a cadastral urban-growth measurement. Changes inside ±0.02 are treated as inconclusive in the PoC change component.
+- NDVI/NDBI change is an index signal, not a cadastral urban-growth measurement. Only NDVI loss >0.02 or NDBI gain >0.02 contributes to change stress; negative NDBI change is not an expansion flag.
 - Sentinel-1 GRD change, when available, is diagnostic only and excluded from the score.
 """
         )

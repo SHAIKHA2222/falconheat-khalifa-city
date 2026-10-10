@@ -155,5 +155,10 @@
     "mode": "public_snapshot",
     "snapshot_date": "2026-10-05",
     "note": "Bundled competition snapshot generated from real EO inputs; public visitors cannot rebuild the AOI or trigger remote EO acquisition."
+  },
+  "analysis_revision": {
+    "version": "4.4",
+    "review_date": "2026-10-10",
+    "note": "Derived CSV scores synchronized with current analysis; original source indicators preserved. Catalog items checked; full raster/population reproduction not performed in this review."
   }
 }
